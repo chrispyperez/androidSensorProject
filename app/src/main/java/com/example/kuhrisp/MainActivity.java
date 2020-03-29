@@ -2,6 +2,7 @@ package com.example.kuhrisp;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -26,6 +27,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     public final void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
 
         Log.v("Debug:", "SensorActivityOnCreateInvoked");
 
@@ -44,37 +46,58 @@ public class MainActivity extends Activity implements SensorEventListener {
     public final void onSensorChanged(SensorEvent event){
         Sensor mySensor = event.sensor;
 
-        if(mySensor.getType() == Sensor.TYPE_ACCELEROMETER){
-            float x = event.values[0];
-            float y = event.values[1];
-            float z = event.values[2];
+//        if(mySensor.getType() == Sensor.TYPE_ACCELEROMETER){ // If this event change is Accelerometer related
+//            float x = event.values[0];
+//            float y = event.values[1];
+//            float z = event.values[2];
+//
+//            long curTime = System.currentTimeMillis();
+//
+//            if ((curTime - lastUpdate) > 100) {
+//                long diffTime = (curTime - lastUpdate);
+//                lastUpdate = curTime;
+//
+//                float speed = Math.abs(x + y +z -last_x -last_y - last_z)/diffTime*10000;
+//
+//                if(speed > SHAKE_THRESHOLD){
+//                    Toast.makeText(this,"Chill", Toast.LENGTH_SHORT).show();
+//                }
+//                last_x = x;
+//                last_y = y;
+//                last_z = z;
+//
+//                TextView text = findViewById(R.id.AcclxAxis);
+//                text.setText(Float.toString(last_x));
+//
+//                text = findViewById(R.id.AcclyAxis);
+//                text.setText(Float.toString(last_y));
+//
+//                text = findViewById(R.id.AcclzAxis);
+//                text.setText(Float.toString(last_z));
+//
+//            }
+//        }
 
-            long curTime = System.currentTimeMillis();
 
-            if ((curTime - lastUpdate) > 100) {
-                long diffTime = (curTime - lastUpdate);
-                lastUpdate = curTime;
 
-                float speed = Math.abs(x + y +z -last_x -last_y - last_z)/diffTime*10000;
 
-                if(speed > SHAKE_THRESHOLD){
-                    Toast.makeText(this,"Chill", Toast.LENGTH_SHORT).show();
-                }
-                last_x = x;
-                last_y = y;
-                last_z = z;
 
-                TextView text = findViewById(R.id.xAxis);
-                text.setText(Float.toString(last_x));
 
-                text = findViewById(R.id.yAxis);
-                text.setText(Float.toString(last_y));
+        float x = event.values[0];
+        float y = event.values[1];
+        float z = event.values[2];
 
-                text = findViewById(R.id.zAxis);
-                text.setText(Float.toString(last_z));
 
-            }
-        }
+        TextView text = findViewById(R.id.GyroxAxis);
+        text.setText(Float.toString(x));
+
+        text = findViewById(R.id.GyroyAxis);
+        text.setText(Float.toString(y));
+
+        text = findViewById(R.id.GyrozAxis);
+        text.setText(Float.toString(z));
+
+
 
     }
 

@@ -2,4 +2,14 @@
     <string name="app_name">Kuhrisp</string>
     <string name="hello_world">Kuhrispy</string>
     <string name="button">Bruh</string>
+    <string name="AcclRdg">Accelerometer Reading</string>
+    <string name="AcclxAxis">X-AXIS</string>
+    <string name="AcclyAxis">Y-AXIS</string>
+    <string name="AcclzAxis">Z-AXIS</string>
+
+    <string name="GyroRdg">Gyro Reading</string>
+    <string name="GyroxAxis">X-AXIS</string>
+    <string name="GyroyAxis">Y-AXIS</string>
+    <string name="GyrozAxis">Z-AXIS</string>
+
 </resources>
