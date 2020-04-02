@@ -10,18 +10,17 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class MainActivity extends Activity implements SensorEventListener {
 
     private SensorManager sensorManager;
-    private Sensor accl;
-    private static final String TAG = "SensorShit";
+    private Sensor gyro;
 
-    private long lastUpdate = 0;
-    private float last_x, last_y, last_z;
-    private static final int SHAKE_THRESHOLD = 600;
+
+    private static final float NS2S = 1.0f / 1000000000.0f;  //constant to convert nanoseconds to seconds.
+    private final float[] deltaRotationVector = new float[4];
+    private float timestamp;
 
     @Override
     public final void onCreate(Bundle savedInstanceState){
@@ -32,8 +31,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         Log.v("Debug:", "SensorActivityOnCreateInvoked");
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accl = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(this,accl,SensorManager.SENSOR_DELAY_NORMAL);
+        gyro = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        sensorManager.registerListener(this,gyro,SensorManager.SENSOR_DELAY_NORMAL);
 
     }
 
@@ -44,48 +43,50 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     @Override
     public final void onSensorChanged(SensorEvent event){
-        Sensor mySensor = event.sensor;
+        //Take current timestep's DeltaRotation * CurrentRotation
+        if(timestamp !=0){
+            final float dT = (event.timestamp - timestamp) * NS2S; //Change in Time
 
-//        if(mySensor.getType() == Sensor.TYPE_ACCELEROMETER){ // If this event change is Accelerometer related
-//            float x = event.values[0];
-//            float y = event.values[1];
-//            float z = event.values[2];
-//
-//            long curTime = System.currentTimeMillis();
-//
-//            if ((curTime - lastUpdate) > 100) {
-//                long diffTime = (curTime - lastUpdate);
-//                lastUpdate = curTime;
-//
-//                float speed = Math.abs(x + y +z -last_x -last_y - last_z)/diffTime*10000;
-//
-//                if(speed > SHAKE_THRESHOLD){
-//                    Toast.makeText(this,"Chill", Toast.LENGTH_SHORT).show();
-//                }
-//                last_x = x;
-//                last_y = y;
-//                last_z = z;
-//
-//                TextView text = findViewById(R.id.AcclxAxis);
-//                text.setText(Float.toString(last_x));
-//
-//                text = findViewById(R.id.AcclyAxis);
-//                text.setText(Float.toString(last_y));
-//
-//                text = findViewById(R.id.AcclzAxis);
-//                text.setText(Float.toString(last_z));
-//
-//            }
-//        }
+            //Axis of the rotation sample, not normalized
+            float axisX = event.values[0];
+            float axisY = event.values[1];
+            float axisZ = event.values[2];
+
+            //Calculate the angular speed of the sample
+            float omegaMagnitude = (float)Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
+
+            //Normalize the rotation vector if it's big enough to get the axis
+            //(EPSILON should represent your maximum allowable margin of error)
+            if (omegaMagnitude > 0){
+                axisX /= omegaMagnitude;
+                axisY /= omegaMagnitude;
+                axisZ /= omegaMagnitude;
+            }
 
 
 
+            // Integrate around this axis with the angular speed by the timestep
+            // in order to get a delta rotation from this sample over the timestep
+            // We will convert this axis-angle representation of the delta rotation
+            // into a quaternion before turning it into the rotation matrix.
+            float thetaOverTwo = omegaMagnitude * dT / 2.0f;
+            float sinThetaOverTwo = (float)Math.sin(thetaOverTwo);
+            float cosThetaOverTwo = (float)Math.cos(thetaOverTwo);
+            deltaRotationVector[0] = sinThetaOverTwo * axisX;
+            deltaRotationVector[1] = sinThetaOverTwo * axisY;
+            deltaRotationVector[2] = sinThetaOverTwo * axisZ;
+            deltaRotationVector[3] = cosThetaOverTwo;
+
+        }
+
+        timestamp = event.timestamp;
+        float[] deltaRotationMatrix = new float[9];
+        SensorManager.getRotationMatrixFromVector(deltaRotationVector,deltaRotationVector);
 
 
-
-        float x = event.values[0];
-        float y = event.values[1];
-        float z = event.values[2];
+        float x = deltaRotationVector[0];
+        float y = deltaRotationVector[1];
+        float z = deltaRotationVector[2];
 
 
         TextView text = findViewById(R.id.GyroxAxis);
@@ -104,7 +105,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     @Override
     protected void onResume(){
         super.onResume();
-        sensorManager.registerListener(this, accl, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
 
     }
 
